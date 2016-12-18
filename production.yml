@@ -1,0 +1,6 @@
+---
+hosts: production
+roles:
+  - common
+  - juanwolf_fr
+  - monitoring

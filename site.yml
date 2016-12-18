@@ -1,0 +1,3 @@
+---
+- include: production.yml
+- include: development.yml
