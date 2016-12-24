@@ -1,0 +1,42 @@
+---
+
+- name: Update cache
+  apt:
+    update_cache: yes
+  become: yes
+
+- name: Install latest version of Nginx
+  apt:
+    name: nginx
+    state: latest
+  become: yes
+
+- name: Install latest version of zsh
+  apt:
+    name: zsh
+    state: latest
+  become: yes
+
+- name: Install vim
+  apt:
+    name: vim
+    state: latest
+  become: yes
+
+- name: Create user to docker group
+  user:
+    name: "{{ server_user }}"
+    groups: sudo
+    shell: "/bin/zsh"
+    createhome: yes
+    state: present
+    password: "{{ server_user_password }}"
+    append: yes
+  become: yes
+
+- name: "Setting up ssh local key for new user {{ server_user }} ."
+  authorized_key:
+    user: "{{ server_user }}"
+    state: present
+    key: "{{ lookup('file', ssh_key_file )}}"
+  become: yes

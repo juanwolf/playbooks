@@ -1,0 +1,75 @@
+---
+
+- name: Update cache
+  apt:
+    update_cache: yes
+  become: yes
+
+- name: Install apt-transport-https
+  apt:
+    name: apt-transport-https
+    state: latest
+  become: yes
+  ignore_errors: yes
+
+- name: Install ca-certificates
+  apt:
+    name: ca-certificates
+    state: latest
+  become: yes
+
+- name: Add docker key in apt
+  apt_key:
+    keyserver: hkp://ha.pool.sks-keyservers.net:80
+    id: 58118E89F3A912897C070ADBF76221572C52609D
+  become: yes
+
+- name: Retrieve kernel version
+  shell: "uname -r"
+  register: kernel_version
+
+- name: Install additional kernel images
+  apt:
+    name: "linux-image-extra-{{ kernel_version.stdout }}"
+    state: latest
+  become: yes
+  ignore_errors: yes
+
+- name: Install additional kernel images
+  apt:
+    name: "linux-image-extra-virtual"
+    state: latest
+  become: yes
+  ignore_errors: yes
+
+- name: Add docker repository
+  apt_repository:
+    repo: deb https://apt.dockerproject.org/repo ubuntu-xenial main
+    state: present
+  become: yes
+
+- name: Update cache for a second time
+  apt:
+    update_cache: yes
+  become: yes
+
+- name: Install latest version of docker
+  apt:
+    name: docker-engine
+    state: latest
+  become: yes
+  ignore_errors: yes
+
+- name: "Add {{ server_user }} user to docker group"
+  user:
+    groups: docker
+    append: yes
+    user: "{{ server_user }}"
+  become: yes
+
+- name: Starting docker service
+  systemd:
+    state: restarted
+    enabled: yes
+    name: docker
+  become: yes

@@ -19,3 +19,6 @@ For that you need to create symlinks to the .git/hooks/ folder:
 ln -s ~/mypath/playbooks/post-commit.sh ~/mypath/playbooks/.git/hooks/post-commit
 ln -s ~/mypath/playbooks/pre-commit.sh ~/mypath/playbooks/.git/hooks/pre-commit
 ```
+
+### Install the roles
+`ansible-galaxy install -r requirements.yml`

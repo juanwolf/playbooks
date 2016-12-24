@@ -1,6 +1,7 @@
 ---
-hosts: production
-roles:
-  - common
-  - juanwolf_fr
-  - monitoring
+- hosts: production
+  strategy: free
+  roles:
+    - common
+    - docker
+

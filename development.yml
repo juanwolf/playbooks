@@ -1,6 +1,7 @@
 ---
-hosts:
-  - development
-roles:
-  - common
-  - juanwolf_fr
+- hosts: development
+  strategy: free
+  roles:
+    - common
+    - docker
+    #    - juanwolf_fr
