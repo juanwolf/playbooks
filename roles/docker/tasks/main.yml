@@ -73,3 +73,17 @@
     enabled: yes
     name: docker
   become: yes
+
+- name: Install pip
+  apt:
+    name: python-pip
+    state: present
+  become: yes
+  ignore_errors: yes
+
+- name: Install docker-py
+  pip:
+    name: docker-py
+    state: present
+  become: yes
+  ignore_errors: yes
