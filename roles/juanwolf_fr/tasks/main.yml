@@ -1,0 +1,88 @@
+---
+- name: Verify db container is present
+  docker_container:
+    name: postgres
+    state: started
+    image: "postgres:{{ postgres_version }}"
+    volumes:
+      - "{{ postgres_volume_path }}:/var/lib/postgresql/data"
+    env:
+      POSTGRES_USER: "{{ postgres_username }}"
+      POSTGRES_PASSWORD: "{{ postgres_password }}"
+  become: yes
+  become_user: "{{ server_user }}"
+
+- name: Verify database is present
+  docker_container:
+    name: postgres_db_create
+    state: started
+    image: "postgres:{{ postgres_version }}"
+    links:
+      - postgres:postgres
+    command: "psql -c 'CREATE DATABASE static;'"
+  register: blog_database
+  ignore_errors: yes
+  become: yes
+  become_user: "{{ server_user }}"
+
+- debug:
+    msg: "Docker database command output: {{ blog_database }} "
+
+- name: Login into docker registry
+  docker_login:
+    registry: "registry.gitlab.com"
+    username: "{{ juanwolf_fr_registry_username }}"
+    password: "{{ juanwolf_fr_registry_password }}"
+  become: yes
+  become_user: "{{ server_user }}"
+
+- name: Recreate static container
+  docker_container:
+    name: "static"
+    image: "{{ juanwolf_fr_image }}:{{ juanwolf_fr_version }}"
+    state: started
+    recreate: yes
+    pull: yes
+    links:
+      - "postgres:db"
+    published_ports:
+      - "8001:8000"
+    env:
+      SECRET_KEY: "{{ juanwolf_fr_secret_key }}"
+      DATABASE_HOST: "db"
+      DATABASE_NAME: "static"
+      DATABASE_USER: "{{ postgres_username }}"
+      DATABASE_PASSWORD: "{{ postgres_password }}"
+      SENTRY_PROTOCOL: "{{ sentry_protocol }}"
+      SENTRY_USER: "{{ juanwolf_fr_sentry_user  }}"
+      SENTRY_PASSWORD: "{{ juanwolf_fr_sentry_password }}"
+      SENTRY_URL: "{{ sentry_url }}"
+  become: yes
+  become_user: "{{ server_user }}"
+
+- name: Run the migrations
+  docker_container:
+    name: "tmp-container-exec"
+    image: "{{ juanwolf_fr_image }}:{{ juanwolf_fr_version }}"
+    command: /opt/virtualenvs/juanwolf_fr/bin/python manage.py migrate
+    published_ports:
+      - "11111:8000"
+    links:
+      - "postgres:db"
+    env:
+      SECRET_KEY: "{{ juanwolf_fr_secret_key }}"
+      DATABASE_HOST: "db"
+      DATABASE_NAME: "static"
+      DATABASE_USER: "{{ postgres_username }}"
+      DATABASE_PASSWORD: "{{ postgres_password }}"
+      DJANGO_LOG_LEVEL: "DEBUG"
+  become: yes
+  become_user: "{{ server_user }}"
+
+- name: Destroy tmp container
+  docker_container:
+    name: "tmp-container-exec"
+    state: absent
+  become: yes
+  become_user: "{{ server_user }}"
+
