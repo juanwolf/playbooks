@@ -58,7 +58,7 @@
       SENTRY_PROTOCOL: "{{ sentry_protocol }}"
       SENTRY_USER: "{{ ces2015_sentry_user  }}"
       SENTRY_PASSWORD: "{{ ces2015_sentry_password }}"
-      SENTRY_URL: "{{ sentry_url }}/{{ ces2015_sentry_project_id }}"
+      SENTRY_URL: "{{ sentry_host }}/{{ ces2015_sentry_project_id }}"
   become: yes
   become_user: "{{ server_user }}"
 
