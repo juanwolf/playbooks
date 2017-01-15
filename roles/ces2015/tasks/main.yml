@@ -1,0 +1,89 @@
+---
+- name: Verify db container is present
+  docker_container:
+    name: postgres
+    state: started
+    image: "postgres:{{ postgres_version }}"
+    volumes:
+      - "{{ postgres_volume_path }}:/var/lib/postgresql/data"
+    env:
+      POSTGRES_USER: "{{ postgres_username }}"
+      POSTGRES_PASSWORD: "{{ postgres_password }}"
+  become: yes
+  become_user: "{{ server_user }}"
+
+- name: Verify database is present
+  docker_container:
+    name: postgres_db_create
+    state: started
+    image: "postgres:{{ postgres_version }}"
+    links:
+      - postgres:postgres
+    command: "psql -c 'CREATE DATABASE ces2015;'"
+  register: ces2015_database
+  ignore_errors: yes
+  become: yes
+  become_user: "{{ server_user }}"
+
+- debug:
+    msg: "Docker database command output: {{ ces2015_database }} "
+
+- name: Login into docker registry
+  docker_login:
+    registry: "registry.gitlab.com"
+    username: "{{ ces2015_registry_username }}"
+    password: "{{ ces2015_registry_password }}"
+  become: yes
+  become_user: "{{ server_user }}"
+
+- name: Recreate ces2015 container
+  docker_container:
+    name: "ces2015"
+    image: "{{ ces2015_image }}:{{ ces2015_version }}"
+    state: started
+    recreate: yes
+    pull: yes
+    links:
+      - "postgres:db"
+    volumes:
+      - "{{ ces2015_volume_path  }}:/opt/ces2015/media"
+    published_ports:
+      - "8000:8000"
+    env:
+      SECRET_KEY: "{{ ces2015_secret_key }}"
+      DATABASE_HOST: "db"
+      DATABASE_NAME: "blog"
+      DATABASE_USER: "{{ postgres_username }}"
+      DATABASE_PASSWORD: "{{ postgres_password }}"
+      SENTRY_PROTOCOL: "{{ sentry_protocol }}"
+      SENTRY_USER: "{{ ces2015_sentry_user  }}"
+      SENTRY_PASSWORD: "{{ ces2015_sentry_password }}"
+      SENTRY_URL: "{{ sentry_url }}/{{ ces2015_sentry_project_id }}"
+  become: yes
+  become_user: "{{ server_user }}"
+
+- name: Run the migrations
+  docker_container:
+    name: "ces2015-tmp-container-exec"
+    image: "{{ ces2015_image }}:{{ ces2015_version }}"
+    command: /opt/virtualenvs/ces2015/bin/python manage.py migrate
+    published_ports:
+      - "11111:8000"
+    links:
+      - "postgres:db"
+    env:
+      SECRET_KEY: "{{ ces2015_secret_key }}"
+      DATABASE_HOST: "db"
+      DATABASE_NAME: "blog"
+      DATABASE_USER: "{{ postgres_username }}"
+      DATABASE_PASSWORD: "{{ postgres_password }}"
+  become: yes
+  become_user: "{{ server_user }}"
+
+- name: Destroy tmp container
+  docker_container:
+    name: "ces2015-tmp-container-exec"
+    state: absent
+  become: yes
+  become_user: "{{ server_user }}"
+
