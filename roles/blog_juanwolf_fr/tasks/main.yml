@@ -36,7 +36,7 @@
   become: yes
   become_user: "{{ server_user }}"
 
-- name: Recreate blog container
+- name: "Recreate blog container with sentry url {{ sentry_host }}/{{ blog_juanwolf_fr_sentry_project_id }}"
   docker_container:
     name: "blog"
     image: "{{ blog_juanwolf_fr_image }}:{{ blog_juanwolf_fr_version }}"
@@ -48,7 +48,7 @@
     volumes:
       - "{{ blog_juanwolf_fr_volume_path  }}:/opt/juanwolf_fr/juanwolf_fr/media"
     published_ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     env:
       SECRET_KEY: "{{ blog_juanwolf_fr_secret_key }}"
       DATABASE_HOST: "db"

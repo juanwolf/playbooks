@@ -46,7 +46,7 @@
     links:
       - "postgres:db"
     published_ports:
-      - "8001:8000"
+      - "127.0.0.1:8001:8000"
     env:
       SECRET_KEY: "{{ juanwolf_fr_secret_key }}"
       DATABASE_HOST: "db"

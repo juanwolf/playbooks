@@ -1,0 +1,31 @@
+---
+- name: Verify mongodb container is present
+  docker_container:
+    name: mongo
+    state: started
+    image: "mongo:latest"
+    volumes:
+      - "/mnt/hd2/mongo/db/:/data/db"
+  become: yes
+  become_user: "{{ server_user }}"
+
+- name: Recreate rocketchat container
+  docker_container:
+    name: rocketchat
+    image: "rocketchat/rocket.chat:latest"
+    state: started
+    recreate: yes
+    pull: yes
+    links:
+      - mongo
+    volumes:
+      - /mnt/hd2/app/rocketchat/uploads:/app/uploads
+    env:
+      PORT=3000
+      ROOT_URL=https://chat.juanwolf.fr
+      MONGO_URL=mongodb://mongo:27017/rocketchat
+    published_ports:
+      - "127.0.0.1:3000:3000"
+  become: yes
+  become_user: "{{ server_user }}"
+

@@ -43,47 +43,12 @@
     state: started
     recreate: yes
     pull: yes
-    links:
-      - "postgres:db"
+    published_ports:
+      - "127.0.0.1:8002:8000"
     volumes:
-      - "{{ ces2015_volume_path  }}:/opt/ces2015/media"
-    published_ports:
-      - "8000:8000"
+      - "/mnt/hd2/apps/ces2015/db.sqlite3:/opt/ces2015/db.sqlite3"
     env:
       SECRET_KEY: "{{ ces2015_secret_key }}"
-      DATABASE_HOST: "db"
-      DATABASE_NAME: "blog"
-      DATABASE_USER: "{{ postgres_username }}"
-      DATABASE_PASSWORD: "{{ postgres_password }}"
-      SENTRY_PROTOCOL: "{{ sentry_protocol }}"
-      SENTRY_USER: "{{ ces2015_sentry_user  }}"
-      SENTRY_PASSWORD: "{{ ces2015_sentry_password }}"
-      SENTRY_URL: "{{ sentry_host }}/{{ ces2015_sentry_project_id }}"
+      # DEBUG: True
   become: yes
   become_user: "{{ server_user }}"
-
-- name: Run the migrations
-  docker_container:
-    name: "ces2015-tmp-container-exec"
-    image: "{{ ces2015_image }}:{{ ces2015_version }}"
-    command: /opt/virtualenvs/ces2015/bin/python manage.py migrate
-    published_ports:
-      - "11111:8000"
-    links:
-      - "postgres:db"
-    env:
-      SECRET_KEY: "{{ ces2015_secret_key }}"
-      DATABASE_HOST: "db"
-      DATABASE_NAME: "blog"
-      DATABASE_USER: "{{ postgres_username }}"
-      DATABASE_PASSWORD: "{{ postgres_password }}"
-  become: yes
-  become_user: "{{ server_user }}"
-
-- name: Destroy tmp container
-  docker_container:
-    name: "ces2015-tmp-container-exec"
-    state: absent
-  become: yes
-  become_user: "{{ server_user }}"
-
