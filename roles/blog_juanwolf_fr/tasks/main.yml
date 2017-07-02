@@ -45,6 +45,7 @@
     pull: yes
     links:
       - "postgres:db"
+      - "dd-agent:datadog"
     volumes:
       - "{{ blog_juanwolf_fr_volume_path  }}:/opt/juanwolf_fr/juanwolf_fr/media"
     published_ports:
@@ -59,6 +60,7 @@
       SENTRY_USER: "{{ blog_juanwolf_fr_sentry_user  }}"
       SENTRY_PASSWORD: "{{ blog_juanwolf_fr_sentry_password }}"
       SENTRY_URL: "{{ sentry_host }}/{{ blog_juanwolf_fr_sentry_project_id }}"
+      DATADOG_AGENT_HOSTNAME: "datadog"
   become: yes
   become_user: "{{ server_user }}"
 
