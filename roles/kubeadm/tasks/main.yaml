@@ -1,0 +1,38 @@
+---
+- name: Update host cache
+  apt:
+    update_cache: true
+
+- name: Install docker
+  apt:
+    name: docker.io
+    state: latest
+
+- name: Install apt-transport-https
+  apt:
+    name: apt-transport-https
+    state: latest
+
+- name: Add google apt keys
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+
+- name: Add kubernetes apt repository
+  apt_repository:
+    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+
+- name: Apt Update
+  apt:
+    update_cache: true
+
+- name: "Install {{ item }}"
+  apt:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - kubectl
+    = kubeadm
+    - kubelet
+
